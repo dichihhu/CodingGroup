@@ -1,30 +1,26 @@
 // uva10189.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
-
 using namespace std;
 
 #include <iostream>
 #include <vector>
-#include <string>
 #include <list>
-
+#include <cstring>
 
 class MineSweeper {
-    struct pos {
+    typedef struct pos {
         int x;
         int y;
-        pos(int _x, int _y) : x(_x), y(_y)
-        {}
-    };
+        pos(int _x, int _y) : x(_x), y(_y) {}
+    } pos_type;
 
     int CaseId;
     int dimM;
     int dimN;
     int MapSize;
     char* answer;
-    vector<struct pos> MineMap;
+    vector<pos_type> MineMap;
 
     void Initialize(int m, int n) {
         dimM = m;
@@ -35,10 +31,10 @@ class MineSweeper {
 
     inline int index(int x, int y) {
         if (x < 0 || y < 0 || x >= dimM || y >= dimN) return -1; 
-        else return x + dimN*y;
+        else return x + dimM*y;
 };
 
-    void MarkMinePosition(struct pos p) {
+    void MarkMinePosition(pos_type p) {
         int minepos = index(p.x, p.y);
         if (minepos >=0 && minepos < MapSize) answer[minepos] = '*';
         for (int i = p.x - 1; i <= p.x + 1; i++)
@@ -58,14 +54,12 @@ public:
     MineSweeper(int cid) : CaseId(cid) {
     };
     ~MineSweeper() {
-        //if (MapSize>1) 
-            delete [] answer;
-        //else delete answer;
+        delete [] answer;
     };
 
     bool ReadInput(istream& in) {
         int m, n = 0;
-        in >> m >> n;
+        in >> n >> m;
         if (m == 0 || n == 0) return false;
 
         MapSize = m*n;
@@ -73,14 +67,14 @@ public:
         for (int i = 0; i < MapSize; i++)
         {
             in >> c;
-            if (c == '*') MineMap.push_back(struct pos(i % m, i / m));
+            if (c == '*') MineMap.push_back(pos_type(i % m, i / m));
         }
 
         Initialize(m, n);
     };
 
     const void CalcAnswer() {
-        vector<struct pos>::iterator it = MineMap.begin();
+        vector<pos_type>::iterator it = MineMap.begin();
         while (it != MineMap.end()) {
             MarkMinePosition(*it);
             it++;
@@ -97,13 +91,14 @@ public:
             
             if (++i == MapSize) break;
         }
+        out << endl;
 
     };
 
 };
 
 
-int _tmain(int argc, _TCHAR* argv[])
+int main()
 {
     list<class MineSweeper> vms;
     int caseid=1;
