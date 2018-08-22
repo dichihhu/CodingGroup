@@ -26,13 +26,14 @@ class MineSweeper {
         dimM = m;
         dimN = n;
         answer = new char[dimM*dimN];
-        memset(answer, '0', sizeof(char)*dimM*dimN);
+        //memset(answer, '0', sizeof(char)*dimM*dimN);
+        for (int i=0;i<dimM*dimN;i++) answer[i] = '0';
     }
 
     inline int index(int x, int y) {
         if (x < 0 || y < 0 || x >= dimM || y >= dimN) return -1; 
         else return x + dimM*y;
-};
+    };
 
     void MarkMinePosition(pos_type p) {
         int minepos = index(p.x, p.y);
@@ -81,6 +82,7 @@ public:
         }
     };
     const void PrintResult(ostream& out) {
+        out << endl;
         out << "Field #" << CaseId << ":" << endl;
         for (int i = 0; i < MapSize; i++);
         int i = 0;
@@ -91,33 +93,22 @@ public:
             
             if (++i == MapSize) break;
         }
-        out << endl;
-
     };
-
 };
 
 
 int main()
 {
-    list<class MineSweeper> vms;
-    int caseid=1;
+    int caseid = 1;
     while (true)
     {
-        MineSweeper* ms = new MineSweeper(caseid);
-        bool ret = ms->ReadInput(cin);
+        MineSweeper ms(caseid);
+        bool ret = ms.ReadInput(cin);
         if (ret == false) break;
-        ms->CalcAnswer();
-        vms.push_back(*ms);
+        ms.CalcAnswer();
+        ms.PrintResult(cout);
         caseid++;
     }
-    list<class MineSweeper>::iterator it = vms.begin();
-    while (!vms.empty())
-    {
-        vms.front().PrintResult(cout);
-        vms.pop_front();
-    }
-    vms.clear();
     return 0;
 }
 
