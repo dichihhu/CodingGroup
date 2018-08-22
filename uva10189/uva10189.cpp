@@ -1,6 +1,3 @@
-// uva10189.cpp : Defines the entry point for the console application.
-//
-
 using namespace std;
 
 #include <iostream>
@@ -19,13 +16,13 @@ class MineSweeper {
     int dimM;
     int dimN;
     int MapSize;
-    char* answer;
+    char answer[100 * 100];
     vector<pos_type> MineMap;
 
     void Initialize(int m, int n) {
         dimM = m;
         dimN = n;
-        answer = new char[dimM*dimN];
+        //answer = new char[dimM*dimN];
         //memset(answer, '0', sizeof(char)*dimM*dimN);
         for (int i=0;i<dimM*dimN;i++) answer[i] = '0';
     }
@@ -55,7 +52,7 @@ public:
     MineSweeper(int cid) : CaseId(cid) {
     };
     ~MineSweeper() {
-        delete [] answer;
+        //delete [] answer;
     };
 
     bool ReadInput(istream& in) {
@@ -82,9 +79,8 @@ public:
         }
     };
     const void PrintResult(ostream& out) {
-        out << endl;
+        if (CaseId >= 2) out << endl;
         out << "Field #" << CaseId << ":" << endl;
-        for (int i = 0; i < MapSize; i++);
         int i = 0;
         while (true)
         {
@@ -111,4 +107,3 @@ int main()
     }
     return 0;
 }
-
