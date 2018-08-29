@@ -66,7 +66,6 @@ bool MineSweeper::ReadInput(istream& in) {
     dimN = n;
     answer = vector<char>(m*n, '0');
 
-    return true;
 }
 
 void MineSweeper::CalcAnswer() {
