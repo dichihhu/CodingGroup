@@ -15,7 +15,8 @@ const T& min(const T& a, const T& b)
 }
 // Command -- Parser --> Script
 // Font -- Script --> Bitmap representation
-// Ordered Bitmap -- renderer + buffer --> Page
+// Ordered Bitmap representation -- renderer + FONTs --> Page
+
 enum Opcode {
     NOP,
     P, // font row col string
@@ -89,7 +90,38 @@ public:
     }
 };
 
+class C5TYPE
+{
+public:
+    C5TYPE() : c(5, vector<char>(6, '.')) {};
+    vector<vector<char>> c;
+};
+static C5TYPE C5A({ { '.', '*', '*', '*', '.', '.' },
+                    { '*', '.', '.', '.', '*', '.' },
+                    { '.', '*', '*', '*', '.', '.' },
+                    { '.', '*', '*', '*', '.', '.' },
+                    { '.', '*', '*', '*', '.', '.' }
+});
 
+
+static map<char, char> rawfont1({ { 'a', "a" }, {'b', "b"});
+static map<char, C5TYPE> rawfontc5({ { 'a', C5A }, { 'b', C5B } });
+
+
+template <typename T>
+struct FontData<T>
+{
+    FontName _name;
+    map<char, T> _data;
+    FontData(FontName f) : _name(f) : _data(map<char, T>) {};
+};
+
+template<typename T>
+class Font<T> {
+public:
+private:
+    map<FontName, FontData<T&>> alpha;
+};
 
 
 static map<string, Opcode> OPCODE({ { ".P", P }, { ".L", L }, { ".R", R }, { ".C", C }, { ".EOP", EOP } });
