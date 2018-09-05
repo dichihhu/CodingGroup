@@ -95,11 +95,6 @@ const FontData& GetFontData(FontName name)
     return fontmap.at(name);
 }
 
-template <class T>
-const T& min(const T& a, const T& b)
-{
-    return ((a < b) ? a : b);
-}
 // Command -- Parser --> Script
 // Font -- Script --> Bitmap representation
 // Ordered Bitmap representation -- renderer + FONTs --> Page
@@ -111,28 +106,6 @@ enum Opcode {
     R, // font row 1   string
     C, // font row 1   string
     EOP // (blank)
-};
-
-class Script {
-public:
-    struct ScriptLine {
-        Opcode op;
-        FontName font;
-        size_t row;
-        size_t col;
-        string text;
-        ScriptLine() : op(NOP), font(NA), row(0), col(0), text("") {};
-    };
-    Script() :
-        MapOpcode({ { ".P", P }, { ".L", L }, { ".R", R }, { ".C", C }, { ".EOP", EOP } }),
-        MapFontName({ { "C1", C1 }, { "C5", C5 } }),
-        s(0)
-    {        
-    };
-private:
-    const map<string, Opcode> MapOpcode;
-    const map<string, FontName> MapFontName;
-    vector<ScriptLine> s;
 };
 
 static map<string, Opcode> OPCODE({ { ".P", P }, { ".L", L }, { ".R", R }, { ".C", C }, { ".EOP", EOP } });
@@ -220,28 +193,6 @@ public:
     }
 };
 
-class TextBitmap : public Bitmap
-{
-public:
-    TextBitmap(size_t w, size_t h) :
-        Bitmap(w, h),
-        _align(NOP),
-        _start_col(1),
-        _start_row(1)
-    {}
-    Opcode align() const { return _align; }
-    size_t start_col() const { return _start_col; }
-    size_t start_row() const { return _start_row; }
-    void set_align(Opcode op) { _align = op; }
-    void set_start_col(size_t c) { _start_col = c; }
-    void set_start_row(size_t r) { _start_row = r; }
-//    void putdata(FontName f, const string& s) { ? ? ? };
-private:
-    Opcode _align;
-    size_t _start_col;
-    size_t _start_row;
-};
-
 class Page : public Bitmap
 {
 public:
@@ -280,31 +231,15 @@ private:
     size_t _row;
 };
 
-bool Parse(istream& in, Script& s)
+bool Parse(istream& in, vector<TextScript>& s)
 {
     string str;
     while (getline(in, str))
     {
-        ScriptLine ln = parseline(str);
-        s.AddLine(ln);
+        TextScript ln = parseline(str);
+        s.push_back(ln);
     }
     return true;
-}
-
-void BuildTextBitmap(const Script& s, vector<TextBitmap>& vtb)
-{
-    for (TextScript& ts : s.fullscript())
-    {
-        size_t width = Font::info(ts.fontname()).w() * ts.size();
-        size_t height = ts.font().h();
-
-        TextBitmap t(width, height);
-        t.set_align(ts.opcode());
-        t.set_start_col(ts.col());
-        t.set_start_row(ts.row());
-//        t.putdata(ts.fontname(), ts.text());//???
-        vtb.push_back(t);
-    }
 }
 
 // ------     ............
@@ -312,60 +247,7 @@ void BuildTextBitmap(const Script& s, vector<TextBitmap>& vtb)
 // ------     ............
 //            ............
 
-void draw(const TextBitmap& t, Page& p)
-{
-    size_t dst_col = 0;
-    size_t dst_row = 0;
-    size_t src_x = 0;
-    size_t src_y = 0;
-    switch (t.align())
-    {
-    case P:
-        dst_col = p.col();
-        dst_row = t.start_row();
-        src_x = 1;
-        src_y = 1;
-        break;
-    case L:
-        dst_col = 1;
-        dst_row = t.start_row();
-        src_x = 1;
-        src_y = 1;
-        break;
-    case R:
-        dst_col = (p.w() - t.w()) > 0 ? (p.w() - t.w() + 1) : 1;
-        dst_row = t.start_row();
-        src_x = (p.w() - t.w()) > 0 ? 1 : (t.w() - p.w() + 1);
-        src_y = 1;
-        break;
-    case C:
-        dst_col = (p.w() - t.w()) > 0 ? ((p.w() - t.w()) / 2) + 1 : 1;
-        dst_row = t.start_row();
-        src_x = (p.w() - t.w()) > 0 ? 1 : ((t.w() - p.w()) / 2) + 1;
-        src_y = 1;
-        break;
-    }
-
-    int dst_w = p.w() - dst_col + 1;
-    int dst_h = p.h() - dst_row + 1;
-
-    int end_of_draw_w = min<size_t>(t.w() - src_x + 1, dst_w);
-    int end_of_draw_h = min<size_t>(t.h() - src_y + 1, dst_h);
-
-    for (int j = 0; j < end_of_draw_h; j++)
-    {
-        for (int i = 0; i < end_of_draw_w; i++)
-        {
-            p.putpoint(t.at(src_x, src_y), dst_col, dst_row);
-            src_x++;
-            dst_col++;
-        }
-        p.carriagereturn();
-        src_y++;
-        dst_row++;
-    }    
-}
-void putcharacter(const TextScript& s, Page& p)
+void PutTextScript(const TextScript& s, Page& p)
 {
     size_t dst_col = 0;
     size_t dst_row = 0;
@@ -374,7 +256,7 @@ void putcharacter(const TextScript& s, Page& p)
     switch (s.opcode())
     {
     case P:
-        dst_col = p.col();
+        dst_col = s.start_col();
         dst_row = s.start_row();
         src_x = 0;
         src_y = 0;
@@ -402,61 +284,48 @@ void putcharacter(const TextScript& s, Page& p)
     int dst_w = p.w() - dst_col;
     int dst_h = p.h() - dst_row;
 
-    int end_of_draw_w = min<size_t>(s.w() - src_x, dst_w);
-    int end_of_draw_h = min<size_t>(s.h() - src_y, dst_h);
-
-    //p.putpoint( /*  find a font for the ch t.at(src_x, src_y)*/, dst_col, dst_row);
-    // ..5.....6.....7.....8.....9.....
-    //    |                      |
-    //    src_x                  src_x+dst_w-1
-    //   which ch: (src_x-1)/f_w + 1   0-base: src_x/f_w
-    //   which pos: (src_x-1)%f_w + 1  0-base: src_x%f_w
     FontData f = GetFontData(s.fontname());
     size_t start_c = src_x / f.w();
+    size_t start_bit = src_x % f.w();
 
-    for (int c = start_c; c < s.text().size(); c++)
+    for (size_t c = start_c; c < s.text().size(); c++)
     {
-        FontBitmap fb = FontBitmap(f.data(s.text()[c]));
-        size_t start_bit = src_x % f.w();
-        src_x =
-            putFontBitmap(fb, start_bit, src_y, p, dst_col, dst_row, dst_w, dst_h);
+        PutFontBitmap(FontBitmap(f.data(s.text()[c])), start_bit, src_y, p, dst_col, dst_row);
+        start_bit += f.w();
+        dst_col += f.w();
     }
-    FontBitmap fb;
-    int end_of_draw_w = min<size_t>(fb.w() - start_bit, dst_w);
-    int end_of_draw_h = min<size_t>(fb.h() - src_y, dst_h);
-    for (int j = 0; j < end_of_draw_h; j++)
-    {
-        for (int i = 0; i < end_of_draw_w; i++)
-        {
-            p.putpoint(fb.at(start_bit+i, j), dst_col, dst_row);
-            src_x++;
-            dst_col++;
-        }
-    }
-    return end_of_draw_w;
 }
 
-Page layout(const vector<TextBitmap>& vtb, Page& p)
+void PutFontBitmap(const FontBitmap& fb, size_t x, size_t y, Page& p, size_t col, size_t row)
 {
-    vector<TextScript> script;
+    for (int j = y; j < fb.h(); j++)
+    {
+        for (int i = x; i < fb.w(); i++)
+        {
+            p.putpoint(fb.at(i, j), col, row);
+            col++;
+        }
+        row++;
+    }
+}
+
+void layout(const vector<TextScript>& script, Page& p)
+{
     for (TextScript line : script)
     {
-        putcharacter(line, p);
+        PutTextScript(line, p);
     }
-    return p;
 }
 
 int main(int argc, char* argv[])
 {
-    Script s;
+    vector<TextScript> s;
     Parse(cin, s);
-    
-    vector<TextBitmap> vtb;
-    BuildTextBitmap(s, vtb);
 
     Page p(60, 60);
-    cout << layout(vtb, p);
+    layout(s, p);
 
+    cout << p;
 
 	return 0;
 }
