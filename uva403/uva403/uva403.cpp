@@ -13,8 +13,8 @@ enum FontName {
     C1,
     C5
 };
-typedef vector<vector<char>> C5TYPE;
-static const C5TYPE C1A{ { 'A' } }, C1B{ { 'B' } }, C1C{ { 'C' } }, C1D{ { 'D' } }, C1E{ { 'E' } }, C1F{ { 'F' } },
+typedef vector<vector<char>> FTYPE;
+static const FTYPE C1A{ { 'A' } }, C1B{ { 'B' } }, C1C{ { 'C' } }, C1D{ { 'D' } }, C1E{ { 'E' } }, C1F{ { 'F' } },
 C1G{ { 'G' } }, C1H{ { 'H' } }, C1I{ { 'I' } }, C1J{ { 'J' } }, C1K{ { 'K' } }, C1L{ { 'L' } }, C1M{ { 'M' } },
 C1N{ { 'N' } }, C1O{ { 'O' } }, C1P{ { 'P' } }, C1Q{ { 'Q' } }, C1R{ { 'R' } }, C1S{ { 'S' } }, C1T{ { 'T' } },
 C1U{ { 'U' } }, C1V{ { 'V' } }, C1W{ { 'W' } }, C1X{ { 'X' } }, C1Y{ { 'Y' } }, C1Z{ { 'Z' } }, C1BLANK{ { ' ' } };
@@ -39,58 +39,58 @@ static const C5Stroke D4S1D1{ '.', '.', '.', '.', '*', '.' };
 static const C5Stroke D1S1D1S1D2{ '.', '*', '.', '*', '.', '.' };
 static const C5Stroke D1S1D4{ '.', '*', '.', '.', '.', '.' };
 static const C5Stroke D6{ '.', '.', '.', '.', '.', '.' };
-static const C5TYPE C5A{ D1S3D2, S1D3S1D1, S5D1, S1D3S1D1, S1D3S1D1 };
-static const C5TYPE C5B{ S4D2, S1D3S1D1, S4D2, S1D3S1D1, S4D2 };
-static const C5TYPE C5C{ D1S4D1, S1D3S1D1, S1D5, S1D5, D1S4D1 };
-static const C5TYPE C5D{ S4D2, S1D3S1D1, S1D3S1D1, S1D3S1D1, S4D2 };
-static const C5TYPE C5E{ S5D1, S1D5, S3D3, S1D5, S5D1 };
-static const C5TYPE C5F{ S5D1, S1D5, S3D3, S1D5, S1D5 };
-static const C5TYPE C5G{ D1S4D1, S1D5, S1D2S2D1, S1D3S1D1, D1S3D2 };
-static const C5TYPE C5H{ S1D3S1D1, S1D3S1D1, S5D1, S1D3S1D1, S1D3S1D1 };
-static const C5TYPE C5I{ S5D1, D2S1D3, D2S1D3, D2S1D3, S5D1 };
-static const C5TYPE C5J{ D2S3D1, D3S1D2, D3S1D2, S1D2S1D2, D1S2D3 };
-static const C5TYPE C5K{ S1D3S1D1, S1D2S1D2, S3D3, S1D2S1D2, S1D3S1D1 };
-static const C5TYPE C5L{ S1D5, S1D5, S1D5, S1D5, S5D1 };
-static const C5TYPE C5M{ S1D3S1D1, S2D1S2D1, S1D1S1D1S1D1, S1D3S1D1, S1D3S1D1 };
-static const C5TYPE C5N{ S1D3S1D1, S1D2S2D1, S1D1S1D1S1D1, S1D2S2D1, S1D3S1D1 };
-static const C5TYPE C5O{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D3S1D1, D1S3D2 };
-static const C5TYPE C5P{ S4D2, S1D3S1D1, S4D2, S1D5, S1D5 };
-static const C5TYPE C5Q{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D2S2D1, D1S4D1 };
-static const C5TYPE C5R{ S4D2, S1D3S1D1, S4D2, S1D2S1D2, S1D3S1D1 };
-static const C5TYPE C5S{ D1S4D1, S1D5, D1S3D2, D4S1D1, S4D2 };
-static const C5TYPE C5T{ S5D1, S1D1S1D1S1D1, D2S1D3, D2S1D3, D1S3D2 };
-static const C5TYPE C5U{ S1D3S1D1, S1D3S1D1, S1D3S1D1, S1D3S1D1, D1S3D2 };
-static const C5TYPE C5V{ S1D3S1D1, S1D3S1D1, D1S1D1S1D2, D1S1D1S1D2, D2S1D3 };
-static const C5TYPE C5W{ S1D3S1D1, S1D3S1D1, S1D1S1D1S1D1, S2D1S2D1, S1D3S1D1 };
-static const C5TYPE C5X{ S1D3S1D1, D1S1D1S1D2, D2S1D3, D1S1D1S1D2, S1D3S1D1 };
-static const C5TYPE C5Y{ S1D3S1D1, D1S1D1S1D2, D2S1D3, D2S1D3, D2S1D3 };
-static const C5TYPE C5Z{ S5D1, D3S1D2, D2S1D3, D1S1D4, S5D1 };
-static const C5TYPE C5BLANK{ D6, D6, D6, D6, D6 };
+static const FTYPE C5A{ D1S3D2, S1D3S1D1, S5D1, S1D3S1D1, S1D3S1D1 };
+static const FTYPE C5B{ S4D2, S1D3S1D1, S4D2, S1D3S1D1, S4D2 };
+static const FTYPE C5C{ D1S4D1, S1D3S1D1, S1D5, S1D5, D1S4D1 };
+static const FTYPE C5D{ S4D2, S1D3S1D1, S1D3S1D1, S1D3S1D1, S4D2 };
+static const FTYPE C5E{ S5D1, S1D5, S3D3, S1D5, S5D1 };
+static const FTYPE C5F{ S5D1, S1D5, S3D3, S1D5, S1D5 };
+static const FTYPE C5G{ D1S4D1, S1D5, S1D2S2D1, S1D3S1D1, D1S3D2 };
+static const FTYPE C5H{ S1D3S1D1, S1D3S1D1, S5D1, S1D3S1D1, S1D3S1D1 };
+static const FTYPE C5I{ S5D1, D2S1D3, D2S1D3, D2S1D3, S5D1 };
+static const FTYPE C5J{ D2S3D1, D3S1D2, D3S1D2, S1D2S1D2, D1S2D3 };
+static const FTYPE C5K{ S1D3S1D1, S1D2S1D2, S3D3, S1D2S1D2, S1D3S1D1 };
+static const FTYPE C5L{ S1D5, S1D5, S1D5, S1D5, S5D1 };
+static const FTYPE C5M{ S1D3S1D1, S2D1S2D1, S1D1S1D1S1D1, S1D3S1D1, S1D3S1D1 };
+static const FTYPE C5N{ S1D3S1D1, S1D2S2D1, S1D1S1D1S1D1, S1D2S2D1, S1D3S1D1 };
+static const FTYPE C5O{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D3S1D1, D1S3D2 };
+static const FTYPE C5P{ S4D2, S1D3S1D1, S4D2, S1D5, S1D5 };
+static const FTYPE C5Q{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D2S2D1, D1S4D1 };
+static const FTYPE C5R{ S4D2, S1D3S1D1, S4D2, S1D2S1D2, S1D3S1D1 };
+static const FTYPE C5S{ D1S4D1, S1D5, D1S3D2, D4S1D1, S4D2 };
+static const FTYPE C5T{ S5D1, S1D1S1D1S1D1, D2S1D3, D2S1D3, D1S3D2 };
+static const FTYPE C5U{ S1D3S1D1, S1D3S1D1, S1D3S1D1, S1D3S1D1, D1S3D2 };
+static const FTYPE C5V{ S1D3S1D1, S1D3S1D1, D1S1D1S1D2, D1S1D1S1D2, D2S1D3 };
+static const FTYPE C5W{ S1D3S1D1, S1D3S1D1, S1D1S1D1S1D1, S2D1S2D1, S1D3S1D1 };
+static const FTYPE C5X{ S1D3S1D1, D1S1D1S1D2, D2S1D3, D1S1D1S1D2, S1D3S1D1 };
+static const FTYPE C5Y{ S1D3S1D1, D1S1D1S1D2, D2S1D3, D2S1D3, D2S1D3 };
+static const FTYPE C5Z{ S5D1, D3S1D2, D2S1D3, D1S1D4, S5D1 };
+static const FTYPE C5BLANK{ D6, D6, D6, D6, D6 };
 
-static const map<char, C5TYPE> MC1({ { 'A', C1A }, { 'B', C1B } });
-static const map<char, C5TYPE> MC5({ { 'A', C5A }, { 'B', C5B } });
+static const map<char, FTYPE> MC1({ { 'A', C1A }, { 'B', C1B } });
+static const map<char, FTYPE> MC5({ { 'A', C5A }, { 'B', C5B } });
 
 class FontData
 {
 public:
-    FontData(FontName f, map<char, C5TYPE> d) : _name(f), _data(d)
+    FontData(FontName f, map<char, FTYPE> d) : _name(f), _data(d)
     {
         _w = _data.operator[]('A').operator[](0).size();
         _h = _data.operator[]('A').size();
     };
     size_t const w() { return _w; }
     size_t const h() { return _h; }
-    C5TYPE& const data(const char c) {return _data.at(c);}
+    FTYPE& const data(const char c) {return _data.at(c);}
 private:
     FontName _name;
-    map<char, C5TYPE> _data;
+    map<char, FTYPE> _data;
     size_t _w;
     size_t _h;
 };
 
-const map<FontName, FontData> fontmap{ { C1, FontData(C1, MC1) }, { C5, FontData(C5, MC5) } };
+static const map<FontName, FontData> fontmap{ { C1, FontData(C1, MC1) }, { C5, FontData(C5, MC5) } };
 
-FontData GetFontHandle(FontName name)
+const FontData& GetFontData(FontName name)
 {
     return fontmap.at(name);
 }
@@ -141,7 +141,8 @@ static map<string, FontName> FONTNAME({ { "C1", C1 }, { "C5", C5 } });
 class TextScript
 {
 public:
-    TextScript() : _col(0), _row(0), _op(NOP), _text(), _w(0), _h(0) {}
+    TextScript() : _col(0), _row(0), _op(NOP), _text(), _w(0), _h(0), _start_col(0), _start_row(0)
+    {}
     size_t size() const { return _text.size(); }
     const string& text() const { return _text; }
     Opcode opcode() const { return _op; }
@@ -150,6 +151,10 @@ public:
     size_t row() const { return _row; }
     size_t w() const { return _w; }
     size_t h() const { return _h; }
+    size_t start_col() const { return _start_col; }
+    size_t start_row() const { return _start_row; }
+    void set_start_col(size_t c) { _start_col = c; }
+    void set_start_row(size_t r) { _start_row = r; }
     void set_font(string s) { _font = FONTNAME[s]; }
     void set_op(string s) { _op = OPCODE[s]; }
     void set_row(size_t r) { _row = r; }
@@ -164,6 +169,8 @@ private:
     size_t _w;
     size_t _h;
     string _text;
+    size_t _start_col;
+    size_t _start_row;
 };
 
 class Bitmap
@@ -206,7 +213,7 @@ private:
 class FontBitmap : public Bitmap
 {
 public:
-    FontBitmap(C5TYPE t) :
+    explicit FontBitmap(FTYPE t) :
         Bitmap(t[0].size(), t.size())
     {
         putdata(t);
@@ -272,7 +279,6 @@ private:
     size_t _col;
     size_t _row;
 };
-
 
 bool Parse(istream& in, Script& s)
 {
@@ -365,12 +371,39 @@ void putcharacter(const TextScript& s, Page& p)
     size_t dst_row = 0;
     size_t src_x = 0;
     size_t src_y = 0;
+    switch (s.opcode())
+    {
+    case P:
+        dst_col = p.col();
+        dst_row = s.start_row();
+        src_x = 0;
+        src_y = 0;
+        break;
+    case L:
+        dst_col = 0;
+        dst_row = s.start_row();
+        src_x = 0;
+        src_y = 0;
+        break;
+    case R:
+        dst_col = (p.w() - s.w()) > 0 ? (p.w() - s.w()) : 0;
+        dst_row = s.start_row();
+        src_x = (p.w() - s.w()) > 0 ? 0 : (s.w() - p.w());
+        src_y = 0;
+        break;
+    case C:
+        dst_col = (p.w() - s.w()) > 0 ? ((p.w() - s.w()) / 2) : 0;
+        dst_row = s.start_row();
+        src_x = (p.w() - s.w()) > 0 ? 0 : ((s.w() - p.w()) / 2);
+        src_y = 0;
+        break;
+    }
 
-    int dst_w = p.w() - dst_col + 1;
-    int dst_h = p.h() - dst_row + 1;
+    int dst_w = p.w() - dst_col;
+    int dst_h = p.h() - dst_row;
 
-    int end_of_draw_w = min<size_t>(s.w() - src_x + 1, dst_w);
-    int end_of_draw_h = min<size_t>(s.h() - src_y + 1, dst_h);
+    int end_of_draw_w = min<size_t>(s.w() - src_x, dst_w);
+    int end_of_draw_h = min<size_t>(s.h() - src_y, dst_h);
 
     //p.putpoint( /*  find a font for the ch t.at(src_x, src_y)*/, dst_col, dst_row);
     // ..5.....6.....7.....8.....9.....
@@ -378,26 +411,35 @@ void putcharacter(const TextScript& s, Page& p)
     //    src_x                  src_x+dst_w-1
     //   which ch: (src_x-1)/f_w + 1   0-base: src_x/f_w
     //   which pos: (src_x-1)%f_w + 1  0-base: src_x%f_w
-    FontData f = GetFontHandle(s.fontname());
-    size_t f_w = f.w();
-    size_t which_ch = src_x / f_w;
-    size_t which_pos = src_x % f_w;
+    FontData f = GetFontData(s.fontname());
+    size_t start_c = src_x / f.w();
 
+    for (int c = start_c; c < s.text().size(); c++)
+    {
+        FontBitmap fb = FontBitmap(f.data(s.text()[c]));
+        size_t start_bit = src_x % f.w();
+        src_x =
+            putFontBitmap(fb, start_bit, src_y, p, dst_col, dst_row, dst_w, dst_h);
+    }
+    FontBitmap fb;
+    int end_of_draw_w = min<size_t>(fb.w() - start_bit, dst_w);
+    int end_of_draw_h = min<size_t>(fb.h() - src_y, dst_h);
     for (int j = 0; j < end_of_draw_h; j++)
     {
         for (int i = 0; i < end_of_draw_w; i++)
         {
-            FontBitmap c = FontBitmap(f.data(s.text()[which_ch]));
-            p.putpoint(c.at(which_pos, j), dst_col, dst_row);
+            p.putpoint(fb.at(start_bit+i, j), dst_col, dst_row);
             src_x++;
             dst_col++;
         }
+    }
+    return end_of_draw_w;
 }
 
 Page layout(const vector<TextBitmap>& vtb, Page& p)
 {
-    vector<Script> script;
-    for (Script line : script)
+    vector<TextScript> script;
+    for (TextScript line : script)
     {
         putcharacter(line, p);
     }
