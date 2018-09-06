@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <sstream>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ static const C5Stroke S5D1{ '*', '*', '*', '*', '*', '.' };
 static const C5Stroke S4D2{ '*', '*', '*', '*', '.', '.' };
 static const C5Stroke D1S4D1{ '.', '*', '*', '*', '*', '.' };
 static const C5Stroke S1D5{ '*', '.', '.', '.', '.', '.' };
-static const C5Stroke D1S4D1{ '.', '*', '*', '*', '*', '.' };
+//static const C5Stroke D1S4D1{ '.', '*', '*', '*', '*', '.' };
 static const C5Stroke S3D3{ '*', '*', '*', '.', '.', '.' };
 static const C5Stroke S1D2S2D1{ '*', '.', '.', '*', '*', '.' };
 static const C5Stroke D2S1D3{ '.', '.', '*', '.', '.', '.' };
@@ -78,9 +79,9 @@ public:
         _w = _data.operator[]('A').operator[](0).size();
         _h = _data.operator[]('A').size();
     };
-    size_t const w() { return _w; }
-    size_t const h() { return _h; }
-    FTYPE& const data(const char c) {return _data.at(c);}
+    size_t w() const { return _w; }
+    size_t h() const { return _h; }
+    const FTYPE& data(const char c) {return _data.at(c);}
 private:
     FontName _name;
     map<char, FTYPE> _data;
@@ -90,7 +91,7 @@ private:
 
 static const map<FontName, FontData> fontmap{ { C1, FontData(C1, MC1) }, { C5, FontData(C5, MC5) } };
 
-const FontData& GetFontData(FontName name)
+const FontData& GetFontData(const FontName name)
 {
     return fontmap.at(name);
 }
@@ -114,8 +115,22 @@ static map<string, FontName> FONTNAME({ { "C1", C1 }, { "C5", C5 } });
 class TextScript
 {
 public:
-    TextScript() : _col(0), _row(0), _op(NOP), _text(), _w(0), _h(0), _start_col(0), _start_row(0)
+    TextScript() : _op(NOP), _font(NA), _row(0), _col(0), _text(""), _w(0), _h(0)
     {}
+    TextScript(istream& in) : _op(NOP), _font(NA), _row(0), _col(0), _text(""), _w(0), _h(0)
+    {
+        string str("");
+        string tmp("");
+        getline(in, str, '|');
+        istringstream ss(str);
+        ss >> tmp; set_op(tmp);
+        ss >> tmp; set_font(tmp);
+        ss >> _row; _row -= 1; //bitmap coordinator start from 0
+        ss >> _col; _col -= 1; //bitmap coordinator start from 0
+        getline(in, _text, '|');
+        set_w();
+        set_h();
+    }
     size_t size() const { return _text.size(); }
     const string& text() const { return _text; }
     Opcode opcode() const { return _op; }
@@ -124,26 +139,23 @@ public:
     size_t row() const { return _row; }
     size_t w() const { return _w; }
     size_t h() const { return _h; }
-    size_t start_col() const { return _start_col; }
-    size_t start_row() const { return _start_row; }
-    void set_start_col(size_t c) { _start_col = c; }
-    void set_start_row(size_t r) { _start_row = r; }
-    void set_font(string s) { _font = FONTNAME[s]; }
+private:
     void set_op(string s) { _op = OPCODE[s]; }
+    void set_font(string s) { _font = FONTNAME[s]; }
     void set_row(size_t r) { _row = r; }
     void set_col(size_t c) { _col = c; }
-    void set_w(size_t w) { _w = w; }
-    void set_h(size_t h) { _h = h; }
-private:
+    void set_w()
+    {
+        _w = GetFontData(fontname()).w() * size();
+    }
+    void set_h() { _h = GetFontData(fontname()).h(); }
     Opcode _op;
     FontName _font;
     size_t _row;
     size_t _col;
+    string _text;
     size_t _w;
     size_t _h;
-    string _text;
-    size_t _start_col;
-    size_t _start_row;
 };
 
 class Bitmap
@@ -151,15 +163,10 @@ class Bitmap
 public:
     Bitmap(size_t w, size_t h) : 
         _w(w), _h(h), 
-        _col(1), _row(1),
         _data(h, vector<char>(w, '.'))
     {}
     size_t w() const { return _w; }
     size_t h() const { return _h; }
-    size_t col() const { return _col; }
-    size_t row() const { return _row; }
-    void set_col(size_t c) { _col = c; }
-    void set_row(size_t r) { _row = r; }
     char& at(size_t x, size_t y)
     {
         return _data.at(y).at(x);
@@ -171,15 +178,23 @@ public:
     void putdata(const vector<vector<char>>& d) { _data = d; }
     void putpoint(const char& c, size_t col, size_t row)
     {
-        set_col(col);
-        set_row(row);
         at(col, row) = c;
+    }
+    friend ostream& operator<<(ostream& out, const Bitmap& p)
+    {
+        for (auto& row : p._data)
+        {
+            for (auto& c : row)
+            {
+                out << c;
+            }
+            out << endl;
+        }
+        return out;
     }
 private:
     size_t _w;
     size_t _h;
-    size_t _col;
-    size_t _row;
     vector<vector<char>> _data;
 };
 
@@ -196,49 +211,19 @@ public:
 class Page : public Bitmap
 {
 public:
-    Page(size_t w, size_t h) : 
-        Bitmap(w, h),
-        _col(1), _row(1)
+    Page(size_t w, size_t h) :
+        Bitmap(w, h)
     {}
-    size_t col() const { return _col; }
-    size_t row() const { return _row; }
-    void set_col(size_t c) { _col = c; }
-    void set_row(size_t r) { _row = r; }
-    void carriagereturn()
-    {
-        set_col(1);
-        set_row(row() + 1);
-    }
-    void putpoint(const char& c, size_t col, size_t row)
-    {
-        set_col(col);
-        set_row(row);
-        at(col, row) = c;
-    }
-    friend ostream& operator<<(ostream& out, const Page& p)
-    {
-        for (auto& row : p.data)
-        {
-            for (auto& c : row)
-            {
-                out << c;
-            }
-        }
-        return out;
-    }
-private:
-    size_t _col;
-    size_t _row;
 };
 
-bool Parse(istream& in, vector<TextScript>& s)
+bool Parse(istream& in, vector<TextScript>& v)
 {
     string str;
-    while (getline(in, str))
-    {
-        TextScript ln = parseline(str);
-        s.push_back(ln);
-    }
+    do {
+        TextScript ts(in);
+        v.push_back(ts);
+    } while (getline(in, str, '\n'));
+
     return true;
 }
 
@@ -246,6 +231,20 @@ bool Parse(istream& in, vector<TextScript>& s)
 // |    |     ............
 // ------     ............
 //            ............
+
+size_t PutFontBitmap(const FontBitmap& fb, size_t x, size_t y, Page& p, size_t col, size_t row)
+{
+    size_t i = 0;
+    size_t c = col, r = row;
+    for (i = x; i < fb.w(); i++, c++)
+    {
+        for (size_t j = y; j < fb.h(); j++, r++)
+        {
+            p.putpoint(fb.at(i, j), c, r);
+        }
+    }
+    return (i - x);
+}
 
 void PutTextScript(const TextScript& s, Page& p)
 {
@@ -256,26 +255,26 @@ void PutTextScript(const TextScript& s, Page& p)
     switch (s.opcode())
     {
     case P:
-        dst_col = s.start_col();
-        dst_row = s.start_row();
+        dst_col = s.col();
+        dst_row = s.row();
         src_x = 0;
         src_y = 0;
         break;
     case L:
         dst_col = 0;
-        dst_row = s.start_row();
+        dst_row = s.row();
         src_x = 0;
         src_y = 0;
         break;
     case R:
         dst_col = (p.w() - s.w()) > 0 ? (p.w() - s.w()) : 0;
-        dst_row = s.start_row();
+        dst_row = s.row();
         src_x = (p.w() - s.w()) > 0 ? 0 : (s.w() - p.w());
         src_y = 0;
         break;
     case C:
         dst_col = (p.w() - s.w()) > 0 ? ((p.w() - s.w()) / 2) : 0;
-        dst_row = s.start_row();
+        dst_row = s.row();
         src_x = (p.w() - s.w()) > 0 ? 0 : ((s.w() - p.w()) / 2);
         src_y = 0;
         break;
@@ -290,24 +289,12 @@ void PutTextScript(const TextScript& s, Page& p)
 
     for (size_t c = start_c; c < s.text().size(); c++)
     {
-        PutFontBitmap(FontBitmap(f.data(s.text()[c])), start_bit, src_y, p, dst_col, dst_row);
-        start_bit += f.w();
-        dst_col += f.w();
+        size_t step = PutFontBitmap(FontBitmap(f.data(s.text()[c])), start_bit, src_y, p, dst_col, dst_row);
+        start_bit += step;
+        dst_col += step;
     }
 }
 
-void PutFontBitmap(const FontBitmap& fb, size_t x, size_t y, Page& p, size_t col, size_t row)
-{
-    for (int j = y; j < fb.h(); j++)
-    {
-        for (int i = x; i < fb.w(); i++)
-        {
-            p.putpoint(fb.at(i, j), col, row);
-            col++;
-        }
-        row++;
-    }
-}
 
 void layout(const vector<TextScript>& script, Page& p)
 {
