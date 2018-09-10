@@ -38,6 +38,7 @@ static const C5Stroke S1D1S1D1S1D1{ '*', '.', '*', '.', '*', '.' };
 static const C5Stroke D4S1D1{ '.', '.', '.', '.', '*', '.' };
 static const C5Stroke D1S1D1S1D2{ '.', '*', '.', '*', '.', '.' };
 static const C5Stroke D1S1D4{ '.', '*', '.', '.', '.', '.' };
+static const C5Stroke S2D2S1D1{ '*', '*', '.', '.', '*', '.' };
 static const C5Stroke D6{ '.', '.', '.', '.', '.', '.' };
 static const FTYPE C5A{ D1S3D2, S1D3S1D1, S5D1, S1D3S1D1, S1D3S1D1 };
 static const FTYPE C5B{ S4D2, S1D3S1D1, S4D2, S1D3S1D1, S4D2 };
@@ -52,7 +53,7 @@ static const FTYPE C5J{ D2S3D1, D3S1D2, D3S1D2, S1D2S1D2, D1S2D3 };
 static const FTYPE C5K{ S1D3S1D1, S1D2S1D2, S3D3, S1D2S1D2, S1D3S1D1 };
 static const FTYPE C5L{ S1D5, S1D5, S1D5, S1D5, S5D1 };
 static const FTYPE C5M{ S1D3S1D1, S2D1S2D1, S1D1S1D1S1D1, S1D3S1D1, S1D3S1D1 };
-static const FTYPE C5N{ S1D3S1D1, S1D2S2D1, S1D1S1D1S1D1, S1D2S2D1, S1D3S1D1 };
+static const FTYPE C5N{ S1D3S1D1, S2D2S1D1, S1D1S1D1S1D1, S1D2S2D1, S1D3S1D1 };
 static const FTYPE C5O{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D3S1D1, D1S3D2 };
 static const FTYPE C5P{ S4D2, S1D3S1D1, S4D2, S1D5, S1D5 };
 static const FTYPE C5Q{ D1S3D2, S1D3S1D1, S1D3S1D1, S1D2S2D1, D1S4D1 };
@@ -198,7 +199,12 @@ public:
     void putpoint(const char& c, size_t col, size_t row)
     {
         if (col >= w() || row >= h()) return;
-        at(col, row) = c;
+        if (c != '.') at(col, row) = c;
+    }
+    void putchar(const char& c, size_t col, size_t row)
+    {
+        if (col >= w() || row >= h()) return;
+        if (c!= ' ') at(col, row) = c;
     }
     friend ostream& operator<<(ostream& out, const Bitmap& p)
     {
@@ -262,6 +268,12 @@ size_t PutFontBitmap(const FontBitmap& fb, size_t x, size_t y, Page& p, size_t c
     }
     return (i - x);
 }
+size_t PutFontBitmap(const char& ch, size_t x, size_t y, Page& p, size_t col, size_t row)
+{
+//    p.putpoint(ch, col, row);
+    p.putchar(ch, col, row);
+    return 1;
+}
 
 void PutTextScript(const TextScript& s, Page& p)
 {
@@ -292,7 +304,7 @@ void PutTextScript(const TextScript& s, Page& p)
         src_y = 0;
         break;
     case C:
-        dst_col = p.w() > s.w() ? ((p.w() - s.w()) / 2) : 0;
+        dst_col = p.w() > s.w() ? ((p.w() - s.w() + 1) / 2) : 0;
         dst_row = s.row();
         src_x = p.w() > s.w() ? 0 : ((s.w() - p.w()) / 2);
         src_y = 0;
@@ -308,7 +320,10 @@ void PutTextScript(const TextScript& s, Page& p)
 
     for (size_t c = start_c; c < s.text().size(); c++)
     {
-        size_t step = PutFontBitmap(FontBitmap(f.data(s.text()[c])), start_bit, src_y, p, dst_col, dst_row);
+        size_t step = s.fontname() == C5 ?
+            PutFontBitmap(FontBitmap(f.data(s.text()[c])), start_bit, src_y, p, dst_col, dst_row)
+          : PutFontBitmap(s.text()[c], start_bit, src_y, p, dst_col, dst_row);
+
         start_bit = 0;
         dst_col += step;
     }
@@ -331,10 +346,13 @@ int main(int argc, char* argv[])
     string str;
     while (getline(cin, str))
     {
+        bool eop = false;
         do {
-            bool eop = Parse(str, s);
+            eop = Parse(str, s);
             if (eop) break;
         } while (getline(cin, str));
+        if (eop == false)
+            return 0;
         Page p(60, 60);
         layout(s, p);
         cout << p;
