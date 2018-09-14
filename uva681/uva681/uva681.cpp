@@ -13,7 +13,7 @@ struct Point
     size_t y;
     Point(size_t i, size_t j): x(i), y(j) {}
 };
-struct ComparePoint : public binaryfunction<Point, Point, bool>
+struct ComparePoint : public binary_function<Point, Point, bool>
 {
     bool operator()(const Point& a, const Point& b)
     {
@@ -44,11 +44,21 @@ public:
             out << a.x << " " << a.y << endl;
         return out;
     }
+    friend ConvexHull& operator+=(ConvexHull& l, const ConvexHull& r)
+    {
+        if (!l._data.empty()) l.pop(); //duplicate vertex
+        l._data.insert(l._data.end(), r._data.rbegin(), r._data.rend());
+        return l;
+    }
+    Point& operator[](size_t n)
+    {
+        return _data[n];
+    }
 private:
     vector<Point> _data;
 };
 
-typedef set<Point> ST;
+typedef set<Point, ComparePoint> ST;
 
 int cross(Point orig, Point a, Point b)
 {
@@ -123,17 +133,68 @@ void ReadData(istream& in, ConvexHull& d)
     }
     return;
 }
+ConvexHull FindConvexHull(ST& pst)
+{
+    vector<Point> st(pst.begin(), pst.end());
+    //points are sorted
+    ConvexHull l, r;
+    size_t start = 0;
+    for(size_t i=0; i<st.size(); ++i)
+    {
+        int next = i;
+
+        while(l.size()>=2)
+        {
+            int n = l.size();
+            int c = cross(l[n-2], l[n-1], st[next]);
+            if (c > 0 ||
+                (c == 0 && farther(l[n-2], l[n-1], st[next])))
+                { l.pop(); }
+            else break;
+        }
+        l.add(st[next]);
+
+        while(r.size()>=2) 
+        {
+            int n = r.size();
+            int c = cross(r[n-2], r[n-1], st[i]);
+            if (c < 0 ||
+                (c == 0 && farther(r[0], r[1], st[i])))
+                { r.pop(); }
+            else break;
+        }
+        r.add(st[i]);
+    }
+
+    return (r += l);
+}
+
+void InsertSet(istream& in, ST& st)
+{
+    int nPoints =0;
+    cin >> nPoints;
+    if (nPoints == -1)
+        cin >> nPoints; 
+    while(nPoints--)
+    {
+        size_t x = 0, y = 0;
+        cin>> x >> y;
+        st.insert(Point(x, y));
+    }
+    return;
+}
 int main ()
 {
     int sets=0;
     cin >> sets;
-
     cout << sets << endl; 
     while (sets--)
     {
-        ConvexHull d;
-        ReadData(cin, d);
-        cout << FindConvexHull(d);
+        //ConvexHull d;
+        //ReadData(cin, d);
+        ST st;
+        InsertSet(cin, st);
+        cout << FindConvexHull(st);
         if (sets >0) cout << "-1" << endl;
     }
     return 0;
