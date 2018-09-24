@@ -3,10 +3,10 @@
 
 // find 4 most vertices(lower, left, upper, right) (sorting)
 // find the min angle formed by the above vertices and the coordination axies (atan2)
-// rotate the capiler clockwise, and find one edge of the rectangle, and then its 4 points:
+// rotate the caliper clockwise, and find one edge of the rectangle, and then its 4 points:
 // - find the angle theta formed by pi, pi+1, pj
 // - the length of line formed by (pj, P-1) is the projection of line(pi,pj) against line (pi, pi+1) by theta degrees
-// - fine P-1's coordination 
+// - find P-1's coordination 
 // - repeat above steps with (P-1, pj, pk) -> P-2
 //                           (P-2, pk, pl) -> P-3
 //                           (P-3, pl, pi) -> P-4
@@ -17,17 +17,9 @@
 #include <algorithm>
 #include <iostream>
 #include <functional>
+#include <iterator>
 
 using namespace std;
-/*
-
-iter pp = *pivot;
-rec(i, j, k, l) = find_rectangle(fourMostVertices, pp+1);
-area.push_back(rec.area());
-perimeter.push_back(rec.perimeter());
-*/
-
-//2nd case, ... etc.
 
 class Vec;
 template <typename T>
@@ -68,6 +60,22 @@ class Vec
 	{
 		return v1.u*v2.v - v2.u*v1.v;
 	}
+    friend float dot(const Vec& v1, const Vec& v2)
+    {
+        return v1.u*v2.u + v1.v*v2.v;
+    }
+    friend float len(const Vec& v)
+    {
+        return hypot(v.u, v.v);
+    }
+    friend Vec scaler(Vec& v, float s)
+    {
+        return Vec(v.u * s, v.v * s);
+    }
+    friend Point end_point(Point& p, Vec& v)
+    {
+        return Point(p._x + v.u, p._y + v.v);
+    }
 public:
 	Vec(const Point& a, const Point& b): u(b._x - a._x), v(b._y - a._y) {}
 private:
@@ -121,36 +129,74 @@ vector<vpcit> FindFourMostV(const vector<Point>& CH)
     
     return vector<vpcit>({ pair_x.first, pair_y.second, pair_x.second, pair_y.first });
 }
-vector<Point> InitCaliper(vector<vpcit> Four)
+vector<Point> InitCaliper(vector<vpcit> Four) // initial caliper is perpendiclar to X and Y axes
 {
- //   auto deref = [](vector<vpcit>::iterator i)->Point { return *(*i); };
-	vector<Point> vp;
-    vp.resize(4);
-//	transform(Four.begin(), Four.end(), vp.begin(), deref);
+    vector<Point> vp;// (4, Point(0.0f, 0.0f));
+    std::transform(Four.begin(), Four.end(), back_inserter<vector<Point>>(vp), [](vpcit i){ return *i; });
 
-	Point p1 (vp[0]._x, vp[3]._y);
-	Point p2 (vp[0]._x, vp[1]._y);
-	Point p3 (vp[2]._x, vp[1]._y);
-	Point p4 (vp[2]._x, vp[3]._y);
-
-	return vector<Point>({p1, p2, p3, p4});
+    return vector<Point>({ 
+        { vp[0]._x, vp[1]._y }, 
+        { vp[2]._x, vp[1]._y },
+        { vp[2]._x, vp[3]._y },
+        { vp[0]._x, vp[3]._y }});
 }
 vpcit RotateCaliper(const vector<Point>& CH, const vector<vpcit>& Four, const vector<Point>& caliper)
 {
-	auto angle = [&](vector<vpcit>::iterator it)
-	{
-		Point p1 = *(*it);
-		Point p2 = *(*(it+1));
-		//acos(p1, )
-		return 0;
-	};
-	//1st case
-//angle(p_minx, p_minx+1, p_minx+1.y*(0, 1)); // (1, 0), (0, -1), (-1, 0)
+    typedef tuple<Point, vpcit, vpcit> Tangent;
 
-//iterator pivot = min_element(Four., [](i, j)
-//	{ return angle(i, i+1, v0(i)) < angle(j, j+1, v0(j));});
-    vpcit i;
-    return i;
+    vector<Tangent> tangentVector({
+        Tangent(caliper[0], Four[0], Four[0] + 1),
+        Tangent(caliper[1], Four[1], Four[1] + 1),
+        Tangent(caliper[2], Four[2], Four[2] + 1),
+        Tangent(caliper[3], Four[3], Four[3] + 1)
+    });
+
+	auto angle = [](Tangent& t) // what if p_rec is the same as p????
+	{
+        Point p_rec = get<0>(t);
+		Point p = *(get<1>(t));
+        Point p_next = *(get<2>(t));
+        return atan2(fabs(cross(Vec(p, p_next), Vec(p, p_rec))), dot(Vec(p, p_next), Vec(p, p_rec)));
+   	};
+
+    vector<float> vf;
+    std::transform(tangentVector.begin(), tangentVector.end(), back_inserter<vector<float>>(vf), angle);
+
+    auto small = min_element(vf.begin(), vf.end());
+
+    auto d = distance(vf.begin(), small);
+    
+    return get<1>(tangentVector[d]);
+}
+vector<Point> FindRec(const vector<Point>& CH, const vector<vpcit>& Four, vpcit next)
+{
+    vpcit i = next - 1;
+    vpcit index_in_Four = *(find(Four.begin(), Four.end(), i));
+    vpcit next_in_Four = index_in_Four + 1;
+
+    Point p = *(index_in_Four);
+    Point p_next = *next;
+    Point p_next_in_Four = *(next_in_Four);
+
+    float length_of_p_to_p_next = len(Vec(p, p_next));
+    float length_of_p_to_rec_vertex = dot(Vec(p, p_next), Vec(p, p_next_in_Four)) / length_of_p_to_p_next;
+
+    Point p_rec = length_of_p_to_rec_vertex > length_of_p_to_p_next ?
+        end_point(p, scaler(Vec(p, p_next), length_of_p_to_rec_vertex / length_of_p_to_p_next))
+        : p_next;
+
+    vector<Point> ret;
+    ret.push_back(p_rec);
+
+    do
+    {
+        p = p_rec;
+        p_next = p_next_in_Four;
+        p_next_in_Four = *(next_in_Four + 1);
+    }
+    while ()
+
+
 }
 void testcase(size_t n)
 {
@@ -166,16 +212,16 @@ void testcase(size_t n)
 
 	vector<vpcit> FourMost = FindFourMostV(CH); // sorted clockwise
 
-	vector<Point> rec = InitCaliper(FourMost);
+	vector<Point> caliper = InitCaliper(FourMost);
 
 	vector<float> Area;
 	vector<float> Perimeter;
     size_t i = CH.size();
 	while(i--)
 	{
-		vpcit next_vertex = RotateCaliper (CH, FourMost, rec);// clockwise
+		vpcit next_vertex = RotateCaliper (CH, FourMost, caliper);// clockwise
 
-//		vector<Point> Rec = FindRec(CH, FourMost, next_vertex);
+		vector<Point> Rec = FindRec(CH, FourMost, next_vertex);
 //		UpdateFourMost(next_vertex, FourMost);
 //		vector<Vec> v1 = {(rec_i.x - pi.x, rec_i.y - pi.y), 
 //		              (rec_j,x - pj.x, rec_j.y - pj.y), ... };
