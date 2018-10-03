@@ -21,11 +21,9 @@
 
 using namespace std;
 
-class Vec;
 template <typename T>
-struct _Point
+class _Point
 {
-    friend class Vec;
     friend istream& operator>>(istream& in, _Point& p)
 	{
 		in >> p._x >> p._y;
@@ -41,50 +39,60 @@ struct _Point
     }
     friend bool lower(const _Point& a, const _Point& b)
     {
-    	return a._y < b._y || (a._y == b._y && a._x < b._x);
+    	return a._y < b._y || (a._y == b._y && a._x > b._x);
     }
-    friend float angle(const _Point& a, const _Point& b)
-    {
-        return 0;
-    }
-    _Point() {}
+
+    //template <typename>
+    //friend class _Vec;
+public:
     _Point(const T& x, const T& y) : _x(x), _y(y) {}
-	T _x;
+    const T& x() const { return _x; }
+    const T& y() const { return _y; }
+private:
+    T _x;
 	T _y;
 };
 typedef _Point<float> Point;
 
-class Vec
+template <typename T>
+class _Vec
 {
-	friend float cross(const Vec& v1, const Vec& v2)
+	friend T cross(const _Vec& v1, const _Vec& v2)
 	{
 		return v1.u*v2.v - v2.u*v1.v;
 	}
-    friend float dot(const Vec& v1, const Vec& v2)
+    friend T dot(const _Vec& v1, const _Vec& v2)
     {
         return v1.u*v2.u + v1.v*v2.v;
     }
-    friend float len(const Vec& v)
+    friend T len(const _Vec& v)
     {
         return hypot(v.u, v.v);
     }
-    friend Vec scaler(Vec& v, float s)
+    friend _Vec scaler(_Vec& v, T s)
     {
-        return Vec(v.u * s, v.v * s);
+        return _Vec(v.u * s, v.v * s);
     }
-    friend Point end_point(Point& p, Vec& v)
+    friend _Point<T> end_point(_Point<T>& p, _Vec& v)
     {
-        return Point(p._x + v.u, p._y + v.v);
+        return Point(p.x() + v.u, p.y() + v.v);
+    }
+    friend T angle(const _Vec& v1, const _Vec& v2)
+    {
+        return atan2(fabs(cross(v1, v2)), dot(v1, v2));
     }
 public:
-	Vec(const Point& a, const Point& b): u(b._x - a._x), v(b._y - a._y) {}
+	_Vec(const _Point<T>& a, const _Point<T>& b): u(b.x() - a.x()), v(b.y() - a.y()) {}
+    _Vec(const T& u, const T& v) : u(u), v(v) {}
 private:
-	float u;
-	float v;
+	T u;
+	T v;
 };
+typedef _Vec<float> Vec;
 
 typedef vector<Point>::iterator vpit;
 typedef vector<Point>::const_iterator vpcit;
+
 
 vector<Point> FindConvexHull(vector<Point>& d)
 {
@@ -127,83 +135,99 @@ vector<vpcit> FindFourMostV(const vector<Point>& CH)
 		return lower(a, b);
 	});
     
+    // clockwise: left-lower, top, right, bottom
     return vector<vpcit>({ pair_x.first, pair_y.second, pair_x.second, pair_y.first });
 }
-vector<Point> InitCaliper(vector<vpcit> Four) // initial caliper is perpendiclar to X and Y axes
+vector<Point> InitCaliper(const vector<vpcit>& Four) // initial caliper is perpendicular to X and Y axes
 {
     vector<Point> vp;// (4, Point(0.0f, 0.0f));
-    std::transform(Four.begin(), Four.end(), back_inserter<vector<Point>>(vp), [](vpcit i){ return *i; });
+    std::transform(Four.begin(), Four.end(), back_inserter<vector<Point>>(vp), 
+        [](vpcit i) { return *i; });
 
-    return vector<Point>({ 
-        { vp[0]._x, vp[1]._y }, 
-        { vp[2]._x, vp[1]._y },
-        { vp[2]._x, vp[3]._y },
-        { vp[0]._x, vp[3]._y }});
+    return vector<Point>({ //convex hull might have 2, 3, 4, ..., 8 points touch the caliper. 
+        { vp[0].x(), vp[1].y() }, // left upper
+        { vp[2].x(), vp[1].y() }, // right upper
+        { vp[2].x(), vp[3].y() }, // right lower
+        { vp[0].x(), vp[3].y() }});// left lower
 }
+
+template <typename T>
+typename T::const_iterator adv1 (typename T::const_iterator i, const T& v)
+{
+    if (next(i) == v.end()) return v.begin();
+    else return next(i);
+};
+
 vpcit RotateCaliper(const vector<Point>& CH, const vector<vpcit>& Four, const vector<Point>& caliper)
 {
     typedef tuple<Point, vpcit, vpcit> Tangent;
-
     vector<Tangent> tangentVector({
-        Tangent(caliper[0], Four[0], Four[0] + 1),
-        Tangent(caliper[1], Four[1], Four[1] + 1),
-        Tangent(caliper[2], Four[2], Four[2] + 1),
-        Tangent(caliper[3], Four[3], Four[3] + 1)
+        Tangent(caliper[0], Four[0], adv1(Four[0], CH)),
+        Tangent(caliper[1], Four[1], adv1(Four[1], CH)),
+        Tangent(caliper[2], Four[2], adv1(Four[2], CH)),
+        Tangent(caliper[3], Four[3], adv1(Four[3], CH))
     });
 
-	auto angle = [](Tangent& t) // what if p_rec is the same as p????
+	auto find_angle = [&](const Tangent& t) // what if p_rec is the same as p????
 	{
         Point p_rec = get<0>(t);
 		Point p = *(get<1>(t));
-        Point p_next = *(get<2>(t));
-        return atan2(fabs(cross(Vec(p, p_next), Vec(p, p_rec))), dot(Vec(p, p_next), Vec(p, p_rec)));
+        Point p_next = *(adv1(get<1>(t), CH));
+        float f = angle(Vec(p, p_next), Vec(p, p_rec));
+        return f > 0.0 ? f : 4.0; //FIXME: limit of atan2 is PI, not 4.0
    	};
 
     vector<float> vf;
-    std::transform(tangentVector.begin(), tangentVector.end(), back_inserter<vector<float>>(vf), angle);
+    std::transform(tangentVector.begin(), tangentVector.end(), back_inserter<vector<float>>(vf), 
+        find_angle);
 
-    auto small = min_element(vf.begin(), vf.end());
+    auto small = min_element(vf.begin(), vf.end()); // edge case: what if the 4 angles are the same?
 
     auto d = distance(vf.begin(), small);
     
     return get<1>(tangentVector[d]);
 }
-vector<Point> FindRec(const vector<Point>& CH, const vector<vpcit>& Four, vpcit next)
+vector<Point> FindRec(const vector<Point>& CH, const vector<vpcit>& Four, vpcit itr_min_angle_vertex)
 {
-    vpcit i = next - 1;
-    vpcit index_in_Four = *(find(Four.begin(), Four.end(), i));
-    vpcit next_in_Four = index_in_Four + 1;
+    // one side of the rectangle is adherent to the edge of convex hull
+    // need to find the first vertex of the rectangle
 
-    Point p = *(index_in_Four);
-    Point p_next = *next;
-    Point p_next_in_Four = *(next_in_Four);
-
-    float length_of_p_to_p_next = len(Vec(p, p_next));
-    float length_of_p_to_rec_vertex = dot(Vec(p, p_next), Vec(p, p_next_in_Four)) / length_of_p_to_p_next;
-
-    Point p_rec = length_of_p_to_rec_vertex > length_of_p_to_p_next ?
-        end_point(p, scaler(Vec(p, p_next), length_of_p_to_rec_vertex / length_of_p_to_p_next))
-        : p_next;
+    vector<vpcit>::const_iterator itr_in_Four = find(Four.begin(), Four.end(), itr_min_angle_vertex);
+    vector<vpcit> reordered_Four, reordered_Four_shift1;
+    for (size_t n = 0; n<Four.size(); ++n)
+    {
+        reordered_Four.push_back(*itr_in_Four);
+        itr_in_Four = adv1(itr_in_Four, Four);
+        reordered_Four_shift1.push_back(*(itr_in_Four));
+    }
 
     vector<Point> ret;
-    ret.push_back(p_rec);
+    std::transform(reordered_Four.begin(), reordered_Four.end(), reordered_Four_shift1.begin(),
+        back_inserter<vector<Point>>(ret),
+        [&](vpcit it, vpcit it_shift1){
+            Point p = *it;
+            Point p_next = *(adv1(it, CH));
+            Point p_next_in_Four = *(it_shift1);
 
-    do
-    {
-        p = p_rec;
-        p_next = p_next_in_Four;
-        p_next_in_Four = *(next_in_Four + 1);
-    }
-    while ()
-
-
+            float length_of_p_to_p_next = len(Vec(p, p_next)); //(a)
+            float length_of_p_to_rec_vertex = dot(Vec(p, p_next), Vec(p, p_next_in_Four)) / length_of_p_to_p_next; //(b)
+            // (a) < (b)
+            // (a) == (b)
+            // (a) > (b)
+            Point p_rec = length_of_p_to_rec_vertex > length_of_p_to_p_next 
+                ? end_point(p, scaler(Vec(p, p_next), length_of_p_to_rec_vertex / length_of_p_to_p_next))
+                : p_next;
+            return p_rec;
+        });
+    return ret;
 }
+
 void testcase(size_t n)
 {
 	vector<Point> dataset;
 	while(n--)
 	{
-		Point p;
+        Point p(0.0, 0.0);
 		cin >> p;
 		dataset.push_back(p);
 	}
